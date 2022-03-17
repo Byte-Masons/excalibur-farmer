@@ -85,26 +85,21 @@ contract ReaperAutoCompoundExcaliburFarmer is ReaperBaseStrategy {
      *      Profit is denominated in WFTM, and takes fees into account.
      */
     function estimateHarvest() external view override returns (uint256 profit, uint256 callFeeToUser) {
-        ( ,uint256 pendingReward) = IMasterChef(MASTER_CHEF).getUserInfo(poolId, address(this));
+        uint256 pendingReward = IMasterChef(MASTER_CHEF).pendingRewards(poolId, address(this));
+        uint256 totalRewards = pendingReward + IERC20Upgradeable(EXC).balanceOf(address(this));
 
-        uint256 freeRewards = IERC20Upgradeable(EXC).balanceOf(address(this));
-        
-        uint256 totalRewards = pendingReward + freeRewards;
-
-        if (totalRewards == 0) {
-            return (0, 0);
+        if (totalRewards != 0) {
+            address[] memory rewardToWftmPath = new address[](2);
+            rewardToWftmPath[0] = EXC;
+            rewardToWftmPath[1] = WFTM;
+            uint256[] memory amountOutMins = IExcaliburRouter(EXCALIBUR_ROUTER).getAmountsOut(
+                totalRewards,
+                rewardToWftmPath
+            );
+            profit += amountOutMins[1];
         }
 
-        address[] memory rewardToWftmPath = new address[](2);
-        rewardToWftmPath[0] = EXC;
-        rewardToWftmPath[1] = WFTM;
-        uint256[] memory amountOutMins = IExcaliburRouter(EXCALIBUR_ROUTER).getAmountsOut(
-            totalRewards,
-            rewardToWftmPath
-        );
-        profit += amountOutMins[1];
-        uint256 freeWftm = IERC20Upgradeable(WFTM).balanceOf(address(this));
-        profit += freeWftm;
+        profit += IERC20Upgradeable(WFTM).balanceOf(address(this));
 
         uint256 wftmFee = (profit * totalFee) / PERCENT_DIVISOR;
         callFeeToUser = (wftmFee * callFee) / PERCENT_DIVISOR;
@@ -217,7 +212,7 @@ contract ReaperAutoCompoundExcaliburFarmer is ReaperBaseStrategy {
      * Get rewards from the MasterChef
      */
     function _claimRewards() internal {
-        IMasterChef(MASTER_CHEF).deposit(poolId, 0);
+        IMasterChef(MASTER_CHEF).harvest(poolId);
     }
 
     /**
