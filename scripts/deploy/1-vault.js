@@ -1,12 +1,12 @@
 async function main() {
   const Vault = await ethers.getContractFactory('ReaperVaultv1_3');
 
-  const wantAddress = '0xCa395560B6003D921D9408aF011C6C61399F66cA';
-  const tokenName = 'SPIRIT-RAINSPIRIT Solidex Crypt';
-  const tokenSymbol = 'rfsAMM-SPIRIT-RAINSPIRIT';
+  const wantAddress = '0x66402fdF9CF83Cdd54bfBB231162eEdA1B611925';
+  const tokenName = 'FTM-UST Excalibur Crypt';
+  const tokenSymbol = 'rf-EXC-V1-FTM-UST';
   const depositFee = 0;
   const tvlCap = ethers.utils.parseEther('2000');
-  const options = { gasPrice: 200000000000, gasLimit: 9000000 };
+  const options = { gasPrice: 300000000000, gasLimit: 9000000 };
 
   const vault = await Vault.deploy(wantAddress, tokenName, tokenSymbol, depositFee, tvlCap, options);
 
